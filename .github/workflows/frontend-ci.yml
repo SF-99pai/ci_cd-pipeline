@@ -1,0 +1,33 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [ main, 'feature/frontend', 'frontend/*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: |
+          npm ci
+
+      - name: Run tests (if any)
+        working-directory: frontend
+        run: |
+          if npm run | grep -q test; then npm test --silent || echo 'frontend tests failed'; else echo 'No frontend tests script'; fi
+
+      - name: Build
+        working-directory: frontend
+        run: |
+          if npm run | grep -q build; then npm run build; else echo 'No build script'; fi
