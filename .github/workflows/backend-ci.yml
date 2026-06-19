@@ -37,3 +37,21 @@ jobs:
       - name: Lint (optional)
         run: |
           if command -v flake8 >/dev/null 2>&1; then flake8 backend || true; else echo 'flake8 not installed, skipping'; fi
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ci_cd-backend:${{ github.sha }} backend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/ci_cd-backend:${{ github.sha }}
