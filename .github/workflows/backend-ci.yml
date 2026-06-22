@@ -144,6 +144,13 @@ jobs:
           ls -la || true
           ls -la docker-compose.yml || true
 
+      - name: Save SSH private key
+        if: ${{ steps.ssh_check.outputs.ssh_open == 'true' }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
       - name: Upload docker-compose.yml
         if: ${{ steps.ssh_check.outputs.ssh_open == 'true' }}
         uses: appleboy/scp-action@v0.1.0
@@ -151,7 +158,8 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key_path: ~/.ssh/id_rsa
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
           source: docker-compose.yml
           target: ~/
 
@@ -162,7 +170,8 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key_path: ~/.ssh/id_rsa
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
           timeout: 5m
           command_timeout: 30m
           script: |
